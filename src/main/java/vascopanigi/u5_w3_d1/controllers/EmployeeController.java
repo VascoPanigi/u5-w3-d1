@@ -4,6 +4,8 @@ import com.cloudinary.Cloudinary;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -31,6 +33,27 @@ public class EmployeeController {
         return this.employeeService.getAllEmployees(pageNum, pageSize, sortBy);
     }
 
+    @GetMapping("/me")
+    public Employee getProfile(@AuthenticationPrincipal Employee currentAuthenticatedEmployee){
+        return currentAuthenticatedEmployee;
+    }
+
+    @PutMapping("/me")
+    public Employee updateProfile(@AuthenticationPrincipal Employee currentAuthenticatedEmployee, @RequestBody Employee body){
+        return this.employeeService.findByIdAndUpdate(currentAuthenticatedEmployee.getId(), body);
+    }
+
+    @DeleteMapping("/me")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteProfile(@AuthenticationPrincipal Employee currentAuthenticatedEmployee){
+        this.employeeService.findByIdAndDelete(currentAuthenticatedEmployee.getId());
+    }
+
+    @GetMapping("/{employeeId}")
+    public Employee findById(@PathVariable UUID employeeId) {
+        return this.employeeService.findById(employeeId);
+    }
+
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public NewEmployeeResponseDTO saveEmployee(@RequestBody @Validated NewEmployeeDTO body, BindingResult validationResult){
@@ -41,21 +64,19 @@ public class EmployeeController {
         return new NewEmployeeResponseDTO(this.employeeService.save(body).getId());
     }
 
-    @GetMapping("/{employeeId}")
-    public Employee findById(@PathVariable UUID employeeId) {
-        return this.employeeService.findById(employeeId);
-    }
-
     @PutMapping("/{employeeId}")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public Employee findByIdAndUpdate(@PathVariable UUID employeeId, @RequestBody Employee body) {
         return this.employeeService.findByIdAndUpdate(employeeId, body);
     }
 
     @DeleteMapping("/{employeeId}")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void findByIdAndDelete(@PathVariable UUID employeeId){this.employeeService.findByIdAndDelete(employeeId);}
 
     @PatchMapping("/{employeeId}/avatar")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public Employee uploadAvatar(@PathVariable UUID employeeId, @RequestParam("avatar") MultipartFile file) throws IOException {
         String url = employeeService.uploadAvatarImage(file);
         return this.employeeService.patchNewAvatar(employeeId, url);

@@ -8,6 +8,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import vascopanigi.u5_w3_d1.entities.Employee;
@@ -26,6 +27,9 @@ public class EmployeeService {
 
     @Autowired
     private Cloudinary cloudinary;
+
+    @Autowired
+    private PasswordEncoder bcrypt;
 
     private final Faker faker;
 
@@ -46,7 +50,7 @@ public class EmployeeService {
                     throw new BadRequestException("This email address: " + body.email() + " is already used. Try again");
                 }
         );
-        Employee newEmployee = new Employee(body.name(), body.surname(), faker.name().username(), body.email(), body.password());
+        Employee newEmployee = new Employee(body.name(), body.surname(), faker.name().username(), body.email(), bcrypt.encode(body.password()));
         newEmployee.setAvatarURL("https://ui-avatars.com/api/?name=" + newEmployee.getName() + "+" + newEmployee.getSurname());
         return employeeRepository.save(newEmployee);
     }
