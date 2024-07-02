@@ -48,7 +48,6 @@ public class EmployeeService {
         );
         Employee newEmployee = new Employee(body.name(), body.surname(), faker.name().username(), body.email(), body.password());
         newEmployee.setAvatarURL("https://ui-avatars.com/api/?name=" + newEmployee.getName() + "+" + newEmployee.getSurname());
-        //infine si salva
         return employeeRepository.save(newEmployee);
     }
 
